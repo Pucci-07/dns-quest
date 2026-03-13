@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🌐 DNS Quest — Apprends le DNS en jouant !</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
+      --accent:#58a6ff;--accent2:#3fb950;--warn:#f78166;--gold:#e3b341;--purple:#bc8cff;
+      --text:#c9d1d9;--text2:#8b949e;--radius:12px;--shadow:0 8px 32px rgba(0,0,0,.5);
+    }
+    html{scroll-behavior:smooth;}
+    body{font-family:Segoe UI,system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+    /* Stars */
+    #stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+    .star{position:absolute;background:#fff;border-radius:50%;animation:twinkle 3s infinite;}
+    @keyframes twinkle{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.5)}}
+
+    #app{position:relative;z-index:1;}
+
+    header{
+      background:linear-gradient(135deg,#0d1117,#161b22);
+      border-bottom:1px solid var(--border);
+      padding:.85rem 1.2rem;
+      display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;
+      position:sticky;top:0;z-index:100;
+      backdrop-filter:blur(10px);
+    }
+    .logo{font-size:1.5rem;font-weight:900;color:var(--accent);letter-spacing:-1px;white-space:nowrap;}
+    .logo span{color:var(--accent2);}
+    .nav-tabs{display:flex;gap:.45rem;flex-wrap:wrap;}
+    .tab-btn{
+      background:var(--surface2);border:1px solid var(--border);color:var(--text2);
+      padding:.45rem .9rem;border-radius:var(--radius);cursor:pointer;font-size:.82rem;font-weight:700;
+      transition:all .2s;white-space:nowrap;
+    }
+    .tab-btn:hover,.tab-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 12px rgba(88,166,255,.3);}
+
+    .score-bar{display:flex;align-items:center;gap:.6rem;background:var(--surface2);border:1px solid var(--border);padding:.35rem .85rem;border-radius:999px;white-space:nowrap;}
+    .score-val{font-weight:900;color:var(--gold);}
+    .level-badge{background:var(--purple);color:#fff;font-size:.72rem;font-weight:900;padding:.15rem .55rem;border-radius:999px;}
+
+    .page{display:none;padding:2rem;max-width:1100px;margin:0 auto;}
+    .page.active{display:block;animation:fadeIn .35s ease;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+    .section-title{font-size:1.85rem;font-weight:900;margin-bottom:.35rem;background:linear-gradient(90deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .section-sub{color:var(--text2);margin-bottom:1.6rem;font-size:.98rem;line-height:1.7;}
+
+    .card{
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      padding:1.3rem;margin-bottom:1.2rem;box-shadow:var(--shadow);
+    }
+
+    .btn-primary{
+      background:linear-gradient(135deg,var(--accent),#1a7fe8);color:#fff;border:none;
+      padding:.75rem 1.6rem;border-radius:var(--radius);cursor:pointer;font-size:.95rem;font-weight:900;
+      transition:transform .15s,box-shadow .15s;box-shadow:0 4px 16px rgba(88,166,255,.3);
+    }
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(88,166,255,.4);}
+    .btn-secondary{
+      background:transparent;border:1px solid var(--border);color:var(--text2);
+      padding:.55rem 1rem;border-radius:10px;cursor:pointer;font-weight:800;
+    }
+    .btn-secondary:hover{border-color:var(--accent);color:var(--text);}
+
+    /* Home grid */
+    .home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1.1rem;}
+    .home-card{
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      padding:1.2rem;cursor:pointer;box-shadow:var(--shadow);transition:all .2s;
+      text-align:center;
+    }
+    .home-card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 12px 40px rgba(88,166,255,.18);}
+    .home-ico{font-size:2.4rem;margin-bottom:.55rem;}
+    .home-title{font-weight:900;color:var(--accent);margin-bottom:.35rem;}
+    .home-desc{color:var(--text2);font-size:.87rem;line-height:1.6;}
+
+    /* Lessons */
+    .lesson-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.1rem;}
+    .lesson-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:all .2s;}
+    .lesson-card:hover{transform:translateY(-3px);border-color:var(--accent);}
+    .lesson-head{padding:1.1rem;display:flex;gap:.9rem;align-items:center;}
+    .lesson-icon{font-size:2rem;}
+    .lesson-title{font-weight:900;}
+    .lesson-sub{color:var(--text2);font-size:.82rem;margin-top:.1rem;}
+    .lesson-body{padding:0 1.1rem 1rem;color:var(--text2);font-size:.9rem;line-height:1.7;}
+    .lesson-foot{padding:.75rem 1.1rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+    .difficulty{font-size:.72rem;font-weight:900;padding:.18rem .55rem;border-radius:999px;}
+    .diff-easy{background:rgba(63,185,80,.15);color:var(--accent2);}
+    .diff-medium{background:rgba(227,179,65,.15);color:var(--gold);}
+    .diff-hard{background:rgba(247,129,102,.15);color:var(--warn);}
+
+    /* Modal */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1000;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px);}
+    .modal-overlay.open{display:flex;}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:720px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 24px 80px rgba(0,0,0,.6);}
+    .modal-header{padding:1.1rem 1.2rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--surface);z-index:1;}
+    .modal-header h2{font-size:1.15rem;font-weight:900;color:var(--accent);}
+    .modal-close{background:var(--surface2);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:50%;cursor:pointer;font-weight:900;}
+    .modal-close:hover{background:var(--warn);border-color:var(--warn);color:#fff;}
+    .modal-body{padding:1.2rem 1.2rem 1.4rem;line-height:1.85;}
+    .modal-body p,.modal-body li{color:var(--text2);}
+    .modal-body h3{color:var(--accent2);margin:1rem 0 .35rem;}
+    .modal-body code{background:var(--surface2);color:var(--gold);padding:.12rem .35rem;border-radius:4px;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-size:.9em;}
+    .info-box{background:rgba(88,166,255,.08);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:.85rem;margin:.8rem 0;}
+    .info-box.warn{background:rgba(247,129,102,.08);border-color:var(--warn);}
+    .info-box.success{background:rgba(63,185,80,.08);border-color:var(--accent2);}
+
+    /* Sim */
+    .sim-row{display:flex;gap:.8rem;flex-wrap:wrap;align-items:center;}
+    .sim-input{flex:1;min-width:220px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:.7rem 1rem;border-radius:var(--radius);font-size:1rem;outline:none;}
+    .sim-input:focus{border-color:var(--accent);}
+    .pipeline{margin-top:1.2rem;display:flex;flex-direction:column;}
+    .pipe-step{display:flex;gap:1rem;align-items:flex-start;opacity:0;transform:translateX(-14px);transition:all .35s;}
+    .pipe-step.visible{opacity:1;transform:translateX(0);}
+    .pipe-dot{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--accent);font-weight:900;}
+    .pipe-content{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:1rem;}
+    .pipe-title{font-weight:900;margin-bottom:.25rem;}
+    .pipe-desc{color:var(--text2);font-size:.9rem;line-height:1.6;}
+    .pipe-result{margin-top:.55rem;padding:.5rem .75rem;border-radius:8px;background:rgba(63,185,80,.1);color:var(--accent2);font-family:ui-monospace,monospace;display:none;}
+    .pipe-content.done .pipe-result{display:block;}
+
+    /* Quiz */
+    .quiz-wrapper{max-width:720px;margin:0 auto;}
+    .progress{height:6px;background:var(--surface2);border-radius:999px;overflow:hidden;margin-bottom:1.1rem;}
+    .progress > div{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width .35s;}
+    .quiz-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.5rem;box-shadow:var(--shadow);}
+    .quiz-num{color:var(--text2);font-weight:800;font-size:.85rem;margin-bottom:.4rem;}
+    .quiz-q{font-weight:900;font-size:1.12rem;line-height:1.5;margin-bottom:1rem;}
+    .quiz-opt{width:100%;text-align:left;background:var(--surface2);border:2px solid var(--border);color:var(--text);padding:.8rem 1rem;border-radius:var(--radius);cursor:pointer;transition:all .2s;font-weight:800;}
+    .quiz-opt:hover{border-color:var(--accent);background:rgba(88,166,255,.1);}
+    .quiz-opt.correct{border-color:var(--accent2);background:rgba(63,185,80,.12);color:var(--accent2);}
+    .quiz-opt.wrong{border-color:var(--warn);background:rgba(247,129,102,.12);color:var(--warn);}
+    .quiz-opt:disabled{cursor:default;opacity:.95;}
+    .quiz-feedback{margin:1rem 0;padding:.75rem 1rem;border-radius:var(--radius);display:none;font-weight:900;}
+    .quiz-feedback.show{display:block;}
+    .quiz-feedback.ok{border:1px solid var(--accent2);color:var(--accent2);background:rgba(63,185,80,.12);}
+    .quiz-feedback.ko{border:1px solid var(--warn);color:var(--warn);background:rgba(247,129,102,.12);}
+    .quiz-controls{display:flex;justify-content:space-between;gap:.8rem;flex-wrap:wrap;align-items:center;margin-top:1rem;}
+    .btn-next{display:none;background:var(--accent2);color:#fff;border:none;padding:.6rem 1.2rem;border-radius:var(--radius);cursor:pointer;font-weight:900;}
+    .btn-next.show{display:inline-block;}
+    .quiz-result{display:none;text-align:center;margin-top:1.2rem;}
+    .quiz-result.show{display:block;}
+    .quiz-score{font-size:3rem;font-weight:1000;color:var(--gold);margin:.7rem 0;}
+
+    /* Memory */
+    .memory-stats{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem;}
+    .mstat .val{font-weight:1000;color:var(--gold);font-size:2rem;text-align:center;}
+    .mstat .lbl{color:var(--text2);font-weight:800;font-size:.78rem;text-align:center;}
+    .memory-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.65rem;max-width:560px;margin:0 auto 1rem;}
+    .mem-card{height:78px;perspective:600px;cursor:pointer;}
+    .mem-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .35s;}
+    .mem-card.flipped .mem-inner,.mem-card.matched .mem-inner{transform:rotateY(180deg);}
+    .mem-front,.mem-back{position:absolute;inset:0;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;backface-visibility:hidden;border:2px solid var(--border);padding:.4rem;text-align:center;font-weight:900;}
+    .mem-front{background:var(--surface);color:var(--accent);font-size:1.5rem;}
+    .mem-back{background:var(--surface2);color:var(--text);transform:rotateY(180deg);font-size:.82rem;}
+    .mem-card.matched .mem-back{border-color:var(--accent2);color:var(--accent2);background:rgba(63,185,80,.12);}
+
+    /* DnD */
+    .dnd-wrap{display:flex;gap:1.5rem;flex-wrap:wrap;}
+    .pool{flex:1;min-width:220px;}
+    .targets{flex:2;min-width:280px;display:flex;flex-direction:column;gap:.7rem;}
+    .chip{display:inline-block;background:var(--surface2);border:2px solid var(--border);border-radius:10px;padding:.5rem .8rem;cursor:grab;font-weight:900;}
+    .chip:active{cursor:grabbing;}
+    .dz{background:var(--surface2);border:2px dashed var(--border);border-radius:var(--radius);padding:.9rem 1rem;display:flex;gap:1rem;align-items:center;}
+    .dz.over{border-color:var(--accent);background:rgba(88,166,255,.08);}
+    .dz.good{border-color:var(--accent2);background:rgba(63,185,80,.08);}
+    .dz.bad{border-color:var(--warn);background:rgba(247,129,102,.08);}
+    .dz .lbl{min-width:170px;color:var(--text2);font-weight:800;font-size:.85rem;}
+    .dz .slot{flex:1;min-height:34px;border-radius:8px;background:rgba(0,0,0,.2);display:flex;align-items:center;padding:0 .6rem;color:var(--text2);font-weight:800;}
+
+    /* Records */
+    .records-table{width:100%;border-collapse:collapse;font-size:.9rem;}
+    .records-table th{background:var(--surface2);color:var(--accent);text-align:left;padding:.75rem 1rem;border-bottom:2px solid var(--border);font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;}
+    .records-table td{padding:.7rem 1rem;border-bottom:1px solid var(--border);color:var(--text2);}
+    .records-table tr:hover td{background:rgba(88,166,255,.04);}
+    .tag{display:inline-block;padding:.12rem .45rem;border-radius:6px;font-weight:1000;font-size:.72rem}
+    .tag-a{background:rgba(88,166,255,.15);color:var(--accent);}
+    .tag-aaaa{background:rgba(188,140,255,.15);color:var(--purple);}
+    .tag-mx{background:rgba(227,179,65,.15);color:var(--gold);}
+    .tag-cname{background:rgba(63,185,80,.15);color:var(--accent2);}
+    .tag-txt{background:rgba(247,129,102,.15);color:var(--warn);}
+    .tag-ns{background:rgba(255,255,255,.08);color:var(--text);}
+
+    /* Adventure */
+    .adv{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);}
+    .adv-top{padding:1.6rem;background:linear-gradient(135deg,#0d1117,#161b22);border-bottom:1px solid var(--border);display:flex;gap:1.2rem;flex-wrap:wrap;align-items:flex-start;}
+    .adv-avatar{font-size:3.2rem;}
+    .adv-top h3{font-size:1.2rem;color:var(--accent);font-weight:1000;margin-bottom:.35rem;}
+    .adv-top p{color:var(--text2);line-height:1.7;}
+    .adv-choices{padding:1.2rem;display:flex;flex-direction:column;gap:.7rem;}
+    .adv-choice{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:.85rem 1rem;color:var(--text);cursor:pointer;font-weight:900;transition:all .2s;text-align:left;}
+    .adv-choice:hover{border-color:var(--accent);background:rgba(88,166,255,.1);transform:translateX(4px);}
+    .adv-hp{padding:.8rem 1.2rem;border-top:1px solid var(--border);display:flex;gap:.6rem;align-items:center;color:var(--text2);font-weight:900;font-size:.85rem;}
+    .hpbar{flex:1;height:7px;background:var(--border);border-radius:999px;overflow:hidden;}
+    .hpfill{height:100%;background:linear-gradient(90deg,var(--warn),var(--gold));width:100%;transition:width .35s;}
+
+    /* Toasts */
+    #toast-container{position:fixed;bottom:1.2rem;right:1.2rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;}
+    .toast{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.7rem 1rem;box-shadow:var(--shadow);font-weight:900;display:flex;gap:.5rem;align-items:center;animation:slideIn .25s ease;}
+    .toast.success{border-color:var(--accent2);color:var(--accent2);}
+    .toast.error{border-color:var(--warn);color:var(--warn);}
+    .toast.info{border-color:var(--accent);color:var(--accent);}
+    @keyframes slideIn{from{transform:translateX(50px);opacity:0}to{transform:translateX(0);opacity:1}}
+    @keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(50px);opacity:0}}
+
+    @media(max-width:640px){
+      header{padding:.75rem 1rem;}
+      .page{padding:1rem;}
+      .mem-card{height:62px;}
+      .memory-grid{gap:.45rem;}
+    }
+  </style>
+</head>
+
+<body>
+  <div id="stars"></div>
+  <div id="toast-container"></div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="lessonModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h2 id="modalTitle">Leçon</h2>
+        <button class="modal-close" id="modalClose">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div id="app">
+    <header>
+      <div class="logo">🌐 DNS<span>Quest</span></div>
+      <nav class="nav-tabs">
+        <button class="tab-btn active" data-page="home">🏠 Accueil</button>
+        <button class="tab-btn" data-page="lessons">📚 Leçons</button>
+        <button class="tab-btn" data-page="sim">🔬 Simulateur</button>
+        <button class="tab-btn" data-page="quiz">🧠 Quiz</button>
+        <button class="tab-btn" data-page="memory">🃏 Mémoire</button>
+        <button class="tab-btn" data-page="dragdrop">🧩 Glisser</button>
+        <button class="tab-btn" data-page="adventure">🗺️ Aventure</button>
+        <button class="tab-btn" data-page="records">📋 Records</button>
+      </nav>
+      <div class="score-bar">⭐ <span class="score-val" id="globalScore">0</span>
+        <span class="level-badge" id="levelBadge">Débutant</span>
+      </div>
+    </header>
+
+    <!-- HOME -->
+    <section class="page active" id="page-home">
+      <div style="text-align:center;padding:2.2rem 1rem 1.6rem;">
+        <div style="font-size:4rem;margin-bottom:.6rem;">🌐</div>
+        <h1 class="section-title" style="font-size:2.4rem;margin-bottom:.5rem;">DNS Quest</h1>
+        <p class="section-sub" style="max-width:700px;margin:0 auto 1.6rem;">
+          Apprends le DNS de façon ludique : leçons interactives, simulateur animé, quiz, memory, glisser‑déposer et aventure.
+        </p>
+        <div style="display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem;">
+          <button class="btn-primary" id="startLessons">📚 Commencer</button>
+          <button class="btn-primary" id="startAdventure" style="background:linear-gradient(135deg,var(--accent2),#2a9e3a);">🗺️ Mode Aventure</button>
+          <button class="btn-secondary" id="startQuiz">🧠 Faire le quiz</button>
+        </div>
+
+        <div class="home-grid">
+          <div class="home-card" data-nav="lessons"><div class="home-ico">📚</div><div class="home-title">Leçons</div><div class="home-desc">Comprendre l’essentiel (hiérarchie, cache, records…)</div></div>
+          <div class="home-card" data-nav="sim"><div class="home-ico">🔬</div><div class="home-title">Simulateur</div><div class="home-desc">Voir la résolution DNS étape par étape (avec animation)</div></div>
+          <div class="home-card" data-nav="quiz"><div class="home-ico">🧠</div><div class="home-title">Quiz</div><div class="home-desc">12 questions + score + explications</div></div>
+          <div class="home-card" data-nav="memory"><div class="home-ico">🃏</div><div class="home-title">Mémoire</div><div class="home-desc">Associer termes DNS ↔ définitions</div></div>
+          <div class="home-card" data-nav="dragdrop"><div class="home-ico">🧩</div><div class="home-title">Glisser‑déposer</div><div class="home-desc">Remettre les acteurs DNS dans le bon ordre</div></div>
+          <div class="home-card" data-nav="records"><div class="home-ico">📋</div><div class="home-title">Records</div><div class="home-desc">A, AAAA, MX, CNAME, TXT, NS + mini lookup</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LESSONS -->
+    <section class="page" id="page-lessons">
+      <h2 class="section-title">📚 Leçons</h2>
+      <p class="section-sub">Clique sur une leçon pour l’ouvrir dans une fenêtre (modal).</p>
+      <div class="lesson-grid" id="lessonsGrid"></div>
+    </section>
+
+    <!-- SIM -->
+    <section class="page" id="page-sim">
+      <h2 class="section-title">🔬 Simulateur DNS</h2>
+      <p class="section-sub">Tape un domaine → observe le parcours cache → résolveur → racine → TLD → autoritaire.</p>
+      <div class="card">
+        <div class="sim-row">
+          <input class="sim-input" id="domainInput" value="www.example.com" placeholder="ex: www.example.com">
+          <button class="btn-primary" id="btnResolve">▶ Résoudre</button>
+          <button class="btn-secondary" id="btnClearSim">🗑 Effacer</button>
+        </div>
+        <div style="margin-top:.9rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+          <button class="btn-secondary" data-setdomain="www.google.fr">google.fr</button>
+          <button class="btn-secondary" data-setdomain="mail.yahoo.com">mail.yahoo.com</button>
+          <button class="btn-secondary" data-setdomain="api.stripe.com">api.stripe.com</button>
+          <button class="btn-secondary" data-setdomain="ftp.debian.org">ftp.debian.org</button>
+        </div>
+      </div>
+      <div class="pipeline" id="pipeline"></div>
+    </section>
+
+    <!-- QUIZ -->
+    <section class="page" id="page-quiz">
+      <h2 class="section-title">🧠 Quiz</h2>
+      <p class="section-sub">Chaque bonne réponse donne des ⭐ et une explication.</p>
+      <div class="quiz-wrapper">
+        <div class="progress"><div id="quizProgress"></div></div>
+        <div id="quizMount"></div>
+        <div class="quiz-result" id="quizResult">
+          <div style="font-size:3.2rem;margin-bottom:.2rem;">🏁</div>
+          <div style="font-weight:1000;font-size:1.5rem;">Résultat</div>
+          <div class="quiz-score" id="quizScoreBig">0/0</div>
+          <div style="color:var(--text2);line-height:1.7;margin-bottom:1rem;" id="quizResultText"></div>
+          <button class="btn-primary" id="quizRestart">🔄 Rejouer</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEMORY -->
+    <section class="page" id="page-memory">
+      <h2 class="section-title">🃏 Jeu de Mémoire</h2>
+      <p class="section-sub">Trouve toutes les paires “terme ↔ définition”.</p>
+      <div class="memory-stats">
+        <div class="mstat"><div class="val" id="memMoves">0</div><div class="lbl">Tentatives</div></div>
+        <div class="mstat"><div class="val" id="memPairs">0</div><div class="lbl">Paires</div></div>
+        <div class="mstat"><div class="val" id="memTime">0s</div><div class="lbl">Temps</div></div>
+      </div>
+      <div class="memory-grid" id="memoryGrid"></div>
+      <div style="text-align:center;">
+        <button class="btn-primary" id="memRestart">🔄 Nouvelle partie</button>
+      </div>
+    </section>
+
+    <!-- DND -->
+    <section class="page" id="page-dragdrop">
+      <h2 class="section-title">🧩 Glisser‑Déposer</h2>
+      <p class="section-sub">Place les composants DNS dans le bon ordre logique de résolution.</p>
+      <div class="card" id="dndMount"></div>
+    </section>
+
+    <!-- ADVENTURE -->
+    <section class="page" id="page-adventure">
+      <h2 class="section-title">🗺️ Aventure</h2>
+      <p class="section-sub">Tu es une requête DNS. Fais les bons choix pour obtenir l’IP finale.</p>
+      <div class="adv">
+        <div class="adv-top">
+          <div class="adv-avatar" id="advAvatar">📦</div>
+          <div>
+            <h3 id="advTitle">…</h3>
+            <p id="advText"></p>
+          </div>
+        </div>
+        <div class="adv-choices" id="advChoices"></div>
+        <div class="adv-hp">
+          <span>❤️ PV</span>
+          <div class="hpbar"><div class="hpfill" id="hpFill"></div></div>
+          <span id="hpText">3/3</span>
+          <button class="btn-secondary" id="advRestart" style="margin-left:auto;">🔄 Recommencer</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RECORDS -->
+    <section class="page" id="page-records">
+      <h2 class="section-title">📋 Records DNS</h2>
+      <p class="section-sub">Liste des types les plus courants + mini “lookup” simulé.</p>
+      <div class="card" style="overflow-x:auto;">
+        <table class="records-table">
+          <thead>
+            <tr><th>Type</th><th>Nom complet</th><th>Rôle</th><th>Exemple</th><th>TTL</th></tr>
+          </thead>
+          <tbody id="recordsBody"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:1000;color:var(--accent);margin-bottom:.7rem;">🔍 Lookup (simulation)</div>
+        <div class="sim-row">
+          <input class="sim-input" id="lkDomain" value="example.com">
+          <select class="sim-input" id="lkType" style="max-width:120px;flex:0 0 auto;">
+            <option>A</option><option>AAAA</option><option>MX</option><option>CNAME</option><option>TXT</option><option>NS</option>
+          </select>
+          <button class="btn-primary" id="lkBtn">🔍 Lookup</button>
+        </div>
+        <div id="lkResult" style="margin-top:1rem;color:var(--text2);"></div>
+      </div>
+    </section>
+  </div>
+
+<script>
+/* =========================================================
+   IMPORTANT : tout est dans un DOMContentLoaded
+   => aucune fonction "introuvable", tout marche au clic.
+========================================================= */
+document.addEventListener('DOMContentLoaded', () => {
+  /* Stars background */
+  const stars = document.getElementById('stars');
+  for(let i=0;i<85;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    const sz=Math.random()*2.5+1;
+    s.style.width=sz+'px';
+    s.style.height=sz+'px';
+    s.style.left=(Math.random()*100)+'%';
+    s.style.top=(Math.random()*100)+'%';
+    s.style.animationDelay=(Math.random()*3)+'s';
+    s.style.animationDuration=(2+Math.random()*3)+'s';
+    stars.appendChild(s);
+  }
+
+  /* Toast */
+  const toastContainer = document.getElementById('toast-container');
+  function toast(msg, type='info', ms=2200){
+    const icon = type==='success'?'✅':type==='error'?'❌':'ℹ️';
+    const t=document.createElement('div');
+    t.className=`toast ${type}`;
+    t.innerHTML=`<span>${icon}</span><span>${msg}</span>`;
+    toastContainer.appendChild(t);
+    setTimeout(()=>{
+      t.style.animation='slideOut .25s ease forwards';
+      setTimeout(()=>t.remove(),260);
+    }, ms);
+  }
+
+  /* Score & levels */
+  let globalScore = 0;
+  const LEVELS = [
+    {min:0,label:'Débutant'},
+    {min:20,label:'Apprenti'},
+    {min:50,label:'Explorateur'},
+    {min:100,label:'Expert'},
+    {min:200,label:'Maître DNS'},
+  ];
+  const scoreEl = document.getElementById('globalScore');
+  const levelEl = document.getElementById('levelBadge');
+  function addScore(n){
+    globalScore += n;
+    scoreEl.textContent = globalScore;
+    const lv = [...LEVELS].reverse().find(l => globalScore >= l.min);
+    levelEl.textContent = lv?.label ?? 'Débutant';
+    if(n>0) toast(`+${n} ⭐`, 'success');
+  }
+
+  /* Navigation */
+  const pages = ['home','lessons','sim','quiz','memory','dragdrop','adventure','records'];
+  function showPage(id){
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-'+id).classList.add('active');
+    const btn = document.querySelector(`.tab-btn[data-page="${id}"]`);
+    if(btn) btn.classList.add('active');
+
+    if(id==='lessons') renderLessons();
+    if(id==='quiz') startQuiz();
+    if(id==='memory') initMemory();
+    if(id==='dragdrop') initDnD();
+    if(id==='adventure') initAdventure();
+    if(id==='records') renderRecords();
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => showPage(btn.dataset.page));
+  });
+  document.getElementById('startLessons').addEventListener('click', ()=>showPage('lessons'));
+  document.getElementById('startAdventure').addEventListener('click', ()=>showPage('adventure'));
+  document.getElementById('startQuiz').addEventListener('click', ()=>showPage('quiz'));
+  document.querySelectorAll('.home-card[data-nav]').forEach(c => c.addEventListener('click', ()=>showPage(c.dataset.nav)));
+
+  /* Modal */
+  const modal = document.getElementById('lessonModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody  = document.getElementById('modalBody');
+  function openModal(title, html){
+    modalTitle.textContent = title;
+    modalBody.innerHTML = html;
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+  }
+  function closeModal(){
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden','true');
+  }
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
+
+  /* Lessons */
+  const LESSONS = [
+    {
+      icon:'🌍', title:"Qu'est-ce que le DNS ?", sub:'La base', difficulty:'easy',
+      summary:"Le DNS traduit les noms de domaine en adresses IP.",
+      content: `
+        <h3>🌍 Le DNS en une phrase</h3>
+        <p>Le <strong>DNS</strong> est l'annuaire d'Internet : il convertit <code>www.example.com</code> en une <strong>adresse IP</strong>.</p>
+        <div class="info-box"><strong>Analogie :</strong> nom = personne, IP = numéro de téléphone.</div>
+        <h3>✅ À retenir</h3>
+        <ul>
+          <li>Les humains retiennent des noms</li>
+          <li>Les machines parlent en IP</li>
+          <li>DNS = traducteur</li>
+        </ul>
+      `
+    },
+    {
+      icon:'🏗️', title:'Hiérarchie DNS', sub:'Arbre', difficulty:'easy',
+      summary:"Racine (.) → TLD (.com) → domaine → sous-domaines",
+      content: `
+        <h3>🌳 Structure</h3>
+        <p>Un nom DNS se lit <strong>de droite à gauche</strong>.</p>
+        <div class="info-box"><code>www.example.com.</code> = <code>.</code> → <code>com</code> → <code>example</code> → <code>www</code></div>
+        <h3>✅ À retenir</h3>
+        <ul><li>Chaque niveau délègue au niveau suivant</li><li>Les serveurs racine savent où trouver les TLD</li></ul>
+      `
+    },
+    {
+      icon:'🔄', title:'Résolution DNS', sub:'Étapes', difficulty:'medium',
+      summary:"Cache → résolveur → racine → TLD → autoritaire → IP",
+      content: `
+        <h3>🔁 Parcours type</h3>
+        <ol>
+          <li>Cache navigateur / OS</li>
+          <li>Résolveur récursif (FAI / 1.1.1.1 / 8.8.8.8)</li>
+          <li>Serveurs racine</li>
+          <li>Serveur TLD</li>
+          <li>Serveur autoritaire</li>
+        </ol>
+        <div class="info-box warn"><strong>Important :</strong> en vrai, le cache accélère énormément.</div>
+      `
+    },
+    {
+      icon:'💾', title:'Cache & TTL', sub:'Performance', difficulty:'easy',
+      summary:"Le cache stocke les réponses; le TTL indique combien de temps.",
+      content: `
+        <h3>⏱️ TTL</h3>
+        <p><code>TTL</code> = durée de validité en secondes.</p>
+        <div class="info-box success">Un TTL de 3600 = 1 heure.</div>
+        <h3>✅ À retenir</h3>
+        <ul><li>Cache = plus rapide</li><li>TTL trop long = changements plus lents à propager</li></ul>
+      `
+    },
+    {
+      icon:'📋', title:'Records DNS', sub:'A, AAAA, MX…', difficulty:'medium',
+      summary:"A=IPv4, AAAA=IPv6, MX=mail, CNAME=alias, TXT=vérifs, NS=serveurs.",
+      content: `
+        <h3>📌 Records essentiels</h3>
+        <ul>
+          <li><strong>A</strong> : nom → IPv4</li>
+          <li><strong>AAAA</strong> : nom → IPv6</li>
+          <li><strong>MX</strong> : serveurs mail</li>
+          <li><strong>CNAME</strong> : alias vers un autre nom</li>
+          <li><strong>TXT</strong> : SPF/DKIM/vérifications</li>
+          <li><strong>NS</strong> : serveurs autoritaires</li>
+        </ul>
+      `
+    },
+    {
+      icon:'🔐', title:'Sécurité DNS', sub:'DNSSEC / DoH', difficulty:'hard',
+      summary:"DNS peut être falsifié; DNSSEC signe les réponses; DoH/DoT chiffrent.",
+      content: `
+        <h3>🛡️ Risques</h3>
+        <ul><li>Cache poisoning</li><li>Hijacking DNS</li></ul>
+        <h3>🔐 Protections</h3>
+        <ul><li><strong>DNSSEC</strong> : signatures</li><li><strong>DoH/DoT</strong> : chiffrement des requêtes</li></ul>
+        <div class="info-box warn">DNSSEC ne chiffre pas : il authentifie.</div>
+      `
+    },
+  ];
+
+  function renderLessons(){
+    const g = document.getElementById('lessonsGrid');
+    if(g.dataset.ready === '1') return;
+    g.dataset.ready = '1';
+    g.innerHTML = LESSONS.map((l,i)=>`
+      <div class="lesson-card" data-lesson="${i}">
+        <div class="lesson-head">
+          <div class="lesson-icon">${l.icon}</div>
+          <div>
+            <div class="lesson-title">${l.title}</div>
+            <div class="lesson-sub">${l.sub}</div>
+          </div>
+        </div>
+        <div class="lesson-body">${l.summary}</div>
+        <div class="lesson-foot">
+          <span class="difficulty diff-${l.difficulty}">${l.difficulty==='easy'?'Facile':l.difficulty==='medium'?'Moyen':'Difficile'}</span>
+          <button class="btn-secondary" style="font-weight:900;">Lire →</button>
+        </div>
+      </div>
+    `).join('');
+
+    g.querySelectorAll('.lesson-card').forEach(card=>{
+      card.addEventListener('click', ()=>{
+        const l = LESSONS[Number(card.dataset.lesson)];
+        openModal(`${l.icon} ${l.title}`, l.content);
+        addScore(2);
+      });
+    });
+  }
+
+  /* Simulateur */
+  const pipeline = document.getElementById('pipeline');
+  document.getElementById('btnClearSim').addEventListener('click', ()=> pipeline.innerHTML='');
+  document.getElementById('btnResolve').addEventListener('click', runSim);
+  document.querySelectorAll('[data-setdomain]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.getElementById('domainInput').value = b.dataset.setdomain;
+      toast('Domaine prêt ✅','info',1200);
+    });
+  });
+
+  function fakeIP(domain){
+    // IP déterministe "random" mais stable par domaine
+    let h=0; for(const ch of domain) h=(h*31 + ch.charCodeAt(0))>>>0;
+    return `${(h%223)+1}.${(h>>8)%255}.${(h>>16)%255}.${(h>>24)%255}`;
+  }
+  async function runSim(){
+    const domain = document.getElementById('domainInput').value.trim() || 'www.example.com';
+    pipeline.innerHTML = '';
+    const ip = fakeIP(domain);
+    const tld = domain.split('.').slice(-1)[0] || 'com';
+
+    const steps = [
+      {ico:'🧠', title:'1) Cache navigateur/OS', desc:'On vérifie si la réponse existe déjà localement.', result:`Cache: MISS (simulation)`},
+      {ico:'🔁', title:'2) Résolveur récursif', desc:'Le résolveur (FAI/1.1.1.1/8.8.8.8) fait les requêtes à ta place.', result:`Demande: ${domain}`},
+      {ico:'🌍', title:'3) Serveur racine (.)', desc:'Il ne connaît pas l’IP, mais indique où trouver le TLD.', result:`Réponse: serveurs du TLD .${tld}`},
+      {ico:'📂', title:`4) Serveur TLD .${tld}`, desc:'Il indique quel serveur autoritaire gère ce domaine.', result:`Réponse: NS autoritaires pour ${tld}`},
+      {ico:'✅', title:'5) Serveur autoritaire', desc:'C’est lui qui détient l’enregistrement final (A/AAAA/CNAME…).', result:`A ${domain} → ${ip}`},
+      {ico:'🎯', title:'6) Retour au client', desc:'Le résolveur renvoie l’IP et met en cache (TTL).', result:`Connexion HTTP/HTTPS vers ${ip}`},
+    ];
+
+    for(let i=0;i<steps.length;i++){
+      const s = steps[i];
+      const row = document.createElement('div');
+      row.className = 'pipe-step';
+      row.innerHTML = `
+        <div class="pipe-dot">${s.ico}</div>
+        <div class="pipe-content">
+          <div class="pipe-title">${s.title}</div>
+          <div class="pipe-desc">${s.desc}</div>
+          <div class="pipe-result">${s.result}</div>
+        </div>
+      `;
+      pipeline.appendChild(row);
+      // animation
+      await sleep(250);
+      row.classList.add('visible');
+      await sleep(450);
+      row.querySelector('.pipe-content').classList.add('done');
+    }
+    addScore(5);
+    toast('Résolution terminée 🎉','success');
+  }
+
+  function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+  /* Quiz */
+  const QUIZ = [
+    {q:"À quoi sert le DNS ?", opts:["Chiffrer les données","Traduire un nom de domaine en IP","Accélérer le CPU","Bloquer le Wi‑Fi"], a:1, exp:"DNS = annuaire : nom → IP."},
+    {q:"Quel record donne une IPv4 ?", opts:["AAAA","A","MX","TXT"], a:1, exp:"A = IPv4. AAAA = IPv6."},
+    {q:"Quel record sert aux emails ?", opts:["MX","CNAME","NS","PTR"], a:0, exp:"MX indique les serveurs mail."},
+    {q:"Le TTL sert à…", opts:["Limiter la taille des paquets","Définir la durée de cache","Choisir le TLD","Créer un certificat"], a:1, exp:"TTL = durée de vie en cache."},
+    {q:"Quel est le rôle d’un serveur racine ?", opts:["Donner l’IP finale","Donner la liste des TLD/leurs serveurs","Chiffrer DNS","Héberger le site"], a:1, exp:"Racine renvoie vers les serveurs TLD."},
+    {q:"CNAME signifie…", opts:["Adresse IP","Alias vers un autre nom","Serveur mail","Signature DNSSEC"], a:1, exp:"CNAME = alias."},
+    {q:"DNSSEC sert surtout à…", opts:["Chiffrer DNS","Authentifier les réponses DNS","Accélérer le réseau","Remplacer HTTPS"], a:1, exp:"DNSSEC signe les données (authenticité), ne chiffre pas."},
+    {q:"DoH signifie…", opts:["DNS over HTTP","DNS over HTTPS","Data over HTTPS","Domain over Host"], a:1, exp:"DoH = DNS over HTTPS."},
+    {q:"NS sert à…", opts:["Indiquer les serveurs autoritaires","Donner une IP v6","Faire un alias","Envoyer un mail"], a:0, exp:"NS = name servers (autorité)."},
+    {q:"Un cache HIT veut dire…", opts:["On refait tout le parcours","Réponse trouvée en cache","DNS cassé","IP invalide"], a:1, exp:"HIT = déjà en cache."},
+    {q:"PTR sert à…", opts:["Nom→IP","IP→Nom","Mail→IP","TLD→Racine"], a:1, exp:"PTR = reverse DNS."},
+    {q:"Quel ordre est le plus juste ?", opts:["Autoritaire→Racine→TLD","Cache→Résolveur→Racine→TLD→Autoritaire","TLD→Cache→Racine","Racine→Cache→Autoritaire"], a:1, exp:"C’est la chaîne logique la plus courante."},
+  ];
+
+  let quizIndex = 0;
+  let quizScore = 0;
+  let quizInited = false;
+
+  const quizMount = document.getElementById('quizMount');
+  const quizProgress = document.getElementById('quizProgress');
+  const quizResult = document.getElementById('quizResult');
+  const quizScoreBig = document.getElementById('quizScoreBig');
+  const quizResultText = document.getElementById('quizResultText');
+  document.getElementById('quizRestart').addEventListener('click', ()=>{ quizInited=false; startQuiz(); });
+
+  function startQuiz(){
+    if(quizInited) return;
+    quizInited = true;
+    quizIndex = 0;
+    quizScore = 0;
+    quizResult.classList.remove('show');
+    renderQuizQuestion();
+  }
+
+  function renderQuizQuestion(){
+    const total = QUIZ.length;
+    quizProgress.style.width = `${(quizIndex/total)*100}%`;
+
+    if(quizIndex >= total){
+      quizProgress.style.width = `100%`;
+      quizMount.innerHTML = '';
+      quizScoreBig.textContent = `${quizScore}/${total}`;
+      const pct = Math.round((quizScore/total)*100);
+      quizResultText.textContent = pct>=80 ? "Excellent ! Tu maîtrises déjà très bien le DNS." :
+                                 pct>=50 ? "Bien ! Continue avec le simulateur et les leçons." :
+                                           "Pas grave : relis les leçons et rejoue au quiz.";
+      quizResult.classList.add('show');
+      addScore(10);
+      return;
+    }
+
+    const item = QUIZ[quizIndex];
+    quizMount.innerHTML = `
+      <div class="quiz-card">
+        <div class="quiz-num">Question ${quizIndex+1}/${total}</div>
+        <div class="quiz-q">${item.q}</div>
+        <div style="display:flex;flex-direction:column;gap:.6rem;" id="opts"></div>
+        <div class="quiz-feedback" id="qfb"></div>
+        <div class="quiz-controls">
+          <div style="color:var(--text2);font-weight:900;">Score: ${quizScore}/${total}</div>
+          <button class="btn-next" id="btnNext">Suivant →</button>
+        </div>
+      </div>
+    `;
+
+    const opts = quizMount.querySelector('#opts');
+    const fb = quizMount.querySelector('#qfb');
+    const btnNext = quizMount.querySelector('#btnNext');
+
+    item.opts.forEach((txt, i) => {
+      const b = document.createElement('button');
+      b.className = 'quiz-opt';
+      b.textContent = txt;
+      b.addEventListener('click', () => {
+        // lock
+        opts.querySelectorAll('button').forEach(x => x.disabled = true);
+
+        const ok = i === item.a;
+        if(ok){
+          b.classList.add('correct');
+          fb.className = 'quiz-feedback show ok';
+          fb.textContent = '✅ Correct — ' + item.exp;
+          quizScore++;
+          addScore(2);
+        }else{
+          b.classList.add('wrong');
+          // show correct
+          opts.querySelectorAll('button')[item.a].classList.add('correct');
+          fb.className = 'quiz-feedback show ko';
+          fb.textContent = '❌ Faux — ' + item.exp;
+        }
+        btnNext.classList.add('show');
+        btnNext.addEventListener('click', () => { quizIndex++; renderQuizQuestion(); }, {once:true});
+      });
+      opts.appendChild(b);
+    });
+  }
+
+  /* Memory */
+  const MEMORY = [
+    ['A','IPv4 (nom → IPv4)'],
+    ['AAAA','IPv6 (nom → IPv6)'],
+    ['MX','Serveur mail'],
+    ['CNAME','Alias vers un autre nom'],
+    ['TXT','Texte (SPF/DKIM/vérif)'],
+    ['NS','Serveurs autoritaires'],
+  ];
+  let memTimer = null;
+  let memSeconds = 0;
+  let memMoves = 0;
+  let memPairs = 0;
+  let memFirst = null;
+  let memLock = false;
+
+  const memMovesEl = document.getElementById('memMoves');
+  const memPairsEl = document.getElementById('memPairs');
+  const memTimeEl  = document.getElementById('memTime');
+  const memGrid = document.getElementById('memoryGrid');
+  document.getElementById('memRestart').addEventListener('click', initMemory);
+
+  function initMemory(){
+    // reset
+    if(memTimer) clearInterval(memTimer);
+    memSeconds = 0; memMoves = 0; memPairs = 0; memFirst = null; memLock = false;
+    memMovesEl.textContent = '0';
+    memPairsEl.textContent = '0';
+    memTimeEl.textContent = '0s';
+
+    // deck: for each pair => term card + definition card with same id
+    const deck = [];
+    MEMORY.forEach((p, idx) => {
+      deck.push({id:idx, face:p[0], type:'term'});
+      deck.push({id:idx, face:p[1], type:'def'});
+    });
+    shuffle(deck);
+
+    memGrid.innerHTML = '';
+    deck.forEach((c) => {
+      const el = document.createElement('div');
+      el.className = 'mem-card';
+      el.dataset.id = c.id;
+      el.dataset.type = c.type;
+      el.dataset.face = c.face;
+      el.innerHTML = `
+        <div class="mem-inner">
+          <div class="mem-front">?</div>
+          <div class="mem-back">${escapeHtml(c.face)}</div>
+        </div>
+      `;
+      el.addEventListener('click', () => onMemClick(el));
+      memGrid.appendChild(el);
+    });
+
+    memTimer = setInterval(() => {
+      memSeconds++;
+      memTimeEl.textContent = memSeconds + 's';
+    }, 1000);
+  }
+
+  function onMemClick(card){
+    if(memLock) return;
+    if(card.classList.contains('flipped') || card.classList.contains('matched')) return;
+
+    card.classList.add('flipped');
+    if(!memFirst){
+      memFirst = card;
+      return;
+    }
+
+    memMoves++;
+    memMovesEl.textContent = String(memMoves);
+
+    const same = memFirst.dataset.id === card.dataset.id;
+    const differentType = memFirst.dataset.type !== card.dataset.type;
+
+    if(same && differentType){
+      // match
+      memFirst.classList.add('matched');
+      card.classList.add('matched');
+      memFirst.classList.remove('flipped');
+      card.classList.remove('flipped');
+      memFirst = null;
+      memPairs++;
+      memPairsEl.textContent = String(memPairs);
+      addScore(2);
+      if(memPairs === MEMORY.length){
+        toast('Mémoire terminé 🎉','success',2500);
+        addScore(6);
+        clearInterval(memTimer);
+      }
+    } else {
+      // mismatch
+      memLock = true;
+      setTimeout(()=>{
+        memFirst.classList.remove('flipped');
+        card.classList.remove('flipped');
+        memFirst = null;
+        memLock = false;
+      }, 650);
+    }
+  }
+
+  /* Drag & Drop */
+  function initDnD(){
+    const mount = document.getElementById('dndMount');
+
+    const pieces = [
+      {id:'cache', label:'Cache'},
+      {id:'resolver', label:'Résolveur récursif'},
+      {id:'root', label:'Serveur racine'},
+      {id:'tld', label:'Serveur TLD'},
+      {id:'auth', label:'Serveur autoritaire'},
+    ];
+    const targets = [
+      {pos:1, expect:'cache', text:'Étape 1 : on regarde d’abord…'},
+      {pos:2, expect:'resolver', text:'Étape 2 : si absent, on demande au…'},
+      {pos:3, expect:'root', text:'Étape 3 : il interroge le…'},
+      {pos:4, expect:'tld', text:'Étape 4 : puis le…'},
+      {pos:5, expect:'auth', text:'Étape 5 : et enfin le…'},
+    ];
+
+    const pool = [...pieces];
+    shuffle(pool);
+
+    mount.innerHTML = `
+      <div style="color:var(--text2);line-height:1.7;margin-bottom:1rem;">
+        Glisse les “chips” à droite, dans l’ordre. Une fois toutes les zones remplies, clique “Vérifier”.
+      </div>
+      <div class="dnd-wrap">
+        <div class="pool">
+          <div style="font-weight:1000;color:var(--accent);margin-bottom:.6rem;">Chips</div>
+          <div id="chipPool" style="display:flex;flex-wrap:wrap;gap:.5rem;"></div>
+          <div style="margin-top:1rem;">
+            <button class="btn-primary" id="dndCheck">✅ Vérifier</button>
+            <button class="btn-secondary" id="dndReset">🔄 Reset</button>
+          </div>
+          <div id="dndMsg" style="margin-top:.8rem;font-weight:1000;"></div>
+        </div>
+        <div class="targets" id="dzWrap"></div>
+      </div>
+    `;
+
+    const chipPool = mount.querySelector('#chipPool');
+    pool.forEach(p=>{
+      const c = document.createElement('div');
+      c.className='chip';
+      c.textContent=p.label;
+      c.draggable=true;
+      c.dataset.id=p.id;
+      c.addEventListener('dragstart', ()=>c.classList.add('dragging'));
+      c.addEventListener('dragend', ()=>c.classList.remove('dragging'));
+      chipPool.appendChild(c);
+    });
+
+    const dzWrap = mount.querySelector('#dzWrap');
+    targets.forEach(t=>{
+      const dz = document.createElement('div');
+      dz.className='dz';
+      dz.dataset.expect=t.expect;
+      dz.innerHTML = `<div class="lbl">${t.text}</div><div class="slot" data-slot>Dépose ici</div>`;
+      dz.addEventListener('dragover', (e)=>{ e.preventDefault(); dz.classList.add('over'); });
+      dz.addEventListener('dragleave', ()=>dz.classList.remove('over'));
+      dz.addEventListener('drop', (e)=>{
+        e.preventDefault();
+        dz.classList.remove('over');
+        const dragging = mount.querySelector('.chip.dragging');
+        if(!dragging) return;
+        dz.querySelector('[data-slot]').textContent = dragging.textContent;
+        dz.querySelector('[data-slot]').dataset.id = dragging.dataset.id;
+      });
+      dzWrap.appendChild(dz);
+    });
+
+    mount.querySelector('#dndReset').addEventListener('click', ()=>initDnD());
+
+    mount.querySelector('#dndCheck').addEventListener('click', ()=>{
+      let okCount=0;
+      dzWrap.querySelectorAll('.dz').forEach(dz=>{
+        dz.classList.remove('good','bad');
+        const got = dz.querySelector('[data-slot]').dataset.id || '';
+        const expect = dz.dataset.expect;
+        if(got && got===expect){ dz.classList.add('good'); okCount++; }
+        else dz.classList.add('bad');
+      });
+      const msg = mount.querySelector('#dndMsg');
+      if(okCount===targets.length){
+        msg.style.color='var(--accent2)';
+        msg.textContent='Parfait ! Ordre correct ✅';
+        addScore(8);
+      } else {
+        msg.style.color='var(--warn)';
+        msg.textContent=`Il y a ${targets.length-okCount} erreur(s). Réessaie !`;
+      }
+    });
+  }
+
+  /* Records */
+  const RECORDS = [
+    {type:'A', tag:'tag-a', name:'Address', role:'Nom → IPv4', ex:'example.com → 93.184.216.34', ttl:'300–3600s'},
+    {type:'AAAA', tag:'tag-aaaa', name:'IPv6 Address', role:'Nom → IPv6', ex:'example.com → 2606:2800::1', ttl:'300–3600s'},
+    {type:'MX', tag:'tag-mx', name:'Mail Exchange', role:'Serveurs mail', ex:'example.com → mail.example.com (10)', ttl:'300–3600s'},
+    {type:'CNAME', tag:'tag-cname', name:'Canonical Name', role:'Alias', ex:'www → example.com', ttl:'300–3600s'},
+    {type:'TXT', tag:'tag-txt', name:'Text', role:'SPF/DKIM/Vérif', ex:'v=spf1 include:_spf… ~all', ttl:'300–3600s'},
+    {type:'NS', tag:'tag-ns', name:'Name Server', role:'Serveurs autoritaires', ex:'example.com → ns1.example.net', ttl:'3600–86400s'},
+  ];
+  function renderRecords(){
+    const body = document.getElementById('recordsBody');
+    if(body.dataset.ready==='1') return;
+    body.dataset.ready='1';
+    body.innerHTML = RECORDS.map(r=>`
+      <tr>
+        <td><span class="tag ${r.tag}">${r.type}</span></td>
+        <td style="color:var(--text);font-weight:900;">${r.name}</td>
+        <td>${r.role}</td>
+        <td><code style="background:rgba(0,0,0,.2);padding:.1rem .35rem;border-radius:6px;color:var(--gold);">${escapeHtml(r.ex)}</code></td>
+        <td>${r.ttl}</td>
+      </tr>
+    `).join('');
+  }
+
+  function runLookup(){
+    const d = document.getElementById('lkDomain').value.trim() || 'example.com';
+    const t = document.getElementById('lkType').value;
+    const out = document.getElementById('lkResult');
+    const ip = fakeIP(d);
+    let answer = '';
+    if(t==='A') answer = ip;
+    if(t==='AAAA') answer = `2606:2800:${(ip.split('.')[0]||1)}::${(ip.split('.')[1]||2)}`;
+    if(t==='MX') answer = `10 mail.${d}`;
+    if(t==='CNAME') answer = `www.${d} → ${d}`;
+    if(t==='TXT') answer = `v=spf1 include:_spf.${d} ~all`;
+    if(t==='NS') answer = `ns1.${d}, ns2.${d}`;
+    out.innerHTML = `<div class="info-box success"><strong>${t} ${escapeHtml(d)}</strong><br><code>${escapeHtml(answer)}</code><br><span style="color:var(--text2);">Résultat simulé (pas une requête réseau réelle).</span></div>`;
+    addScore(2);
+  }
+  document.getElementById('lkBtn').addEventListener('click', runLookup);
+
+  /* Adventure */
+  let hp=3;
+  let advState='start';
+  const hpFill = document.getElementById('hpFill');
+  const hpText = document.getElementById('hpText');
+  const advTitle = document.getElementById('advTitle');
+  const advText = document.getElementById('advText');
+  const advChoices = document.getElementById('advChoices');
+
+  function setHP(n){
+    hp = Math.max(0, Math.min(3, n));
+    hpText.textContent = `${hp}/3`;
+    hpFill.style.width = `${(hp/3)*100}%`;
+  }
+
+  const ADV = {
+    start: {
+      avatar:'📦',
+      title:'Tu es une requête DNS !',
+      text:"Objectif : obtenir l’IP de www.example.com. Où vas-tu en premier ?",
+      choices:[
+        {label:'🧠 Vérifier le cache local', next:'cache', ok:true},
+        {label:'🌍 Aller direct au serveur racine', next:'root', ok:false, dmg:1},
+      ]
+    },
+    cache: {
+      avatar:'🧠',
+      title:'Cache local',
+      text:"Le cache n’a pas la réponse (MISS). Prochaine étape ?",
+      choices:[
+        {label:'🔁 Demander au résolveur récursif', next:'resolver', ok:true},
+        {label:'✅ Aller au serveur autoritaire au hasard', next:'fail', ok:false, dmg:1},
+      ]
+    },
+    resolver: {
+      avatar:'🔁',
+      title:'Résolveur récursif',
+      text:"Le résolveur va demander au bon endroit. Qui interroge-t-il d’abord ?",
+      choices:[
+        {label:'🌍 Serveur racine (.)', next:'root', ok:true},
+        {label:'📂 Serveur TLD directement', next:'tld', ok:false, dmg:1},
+      ]
+    },
+    root: {
+      avatar:'🌍',
+      title:'Serveur racine (.)',
+      text:"Le racine ne donne pas l’IP, il indique le TLD. Ensuite ?",
+      choices:[
+        {label:'📂 Aller au serveur TLD (.com/.fr…)', next:'tld', ok:true},
+        {label:'🧠 Retourner au cache', next:'cache', ok:false, dmg:1},
+      ]
+    },
+    tld: {
+      avatar:'📂',
+      title:'Serveur TLD',
+      text:"Le TLD te renvoie vers les serveurs autoritaires du domaine. Ensuite ?",
+      choices:[
+        {label:'✅ Serveur autoritaire', next:'auth', ok:true},
+        {label:'🔁 Redemander au résolveur sans raison', next:'resolver', ok:false, dmg:1},
+      ]
+    },
+    auth: {
+      avatar:'✅',
+      title:'Serveur autoritaire',
+      text:"Bravo ! Tu obtiens l’enregistrement A final. Mission réussie.",
+      choices:[
+        {label:'🏁 Fin (gagner des ⭐)', next:'win', ok:true},
+      ]
+    },
+    win: {
+      avatar:'🎉',
+      title:'Victoire !',
+      text:"Tu as compris le chemin de résolution DNS. Rejoue pour t’entraîner.",
+      choices:[
+        {label:'🔄 Rejouer', next:'start', ok:true},
+      ]
+    },
+    fail: {
+      avatar:'💥',
+      title:'Échec…',
+      text:"Tu t’es perdu. Recommence et suis la chaîne logique.",
+      choices:[
+        {label:'🔄 Recommencer', next:'start', ok:true},
+      ]
+    }
+  };
+
+  function initAdventure(){
+    setHP(3);
+    advGo('start', true);
+  }
+  function advGo(state, silent=false){
+    advState = state;
+    const node = ADV[state];
+    document.getElementById('advAvatar').textContent = node.avatar;
+    advTitle.textContent = node.title;
+    advText.textContent = node.text;
+    advChoices.innerHTML = '';
+
+    node.choices.forEach(ch=>{
+      const b = document.createElement('button');
+      b.className='adv-choice';
+      b.textContent = ch.label;
+      b.addEventListener('click', ()=>{
+        if(!ch.ok){
+          setHP(hp - (ch.dmg || 1));
+          toast('Mauvais choix… -1 PV','error',1400);
+          if(hp<=0){
+            toast('PV à 0. Recommence.','error');
+            advGo('fail');
+            return;
+          }
+        } else if(!silent){
+          addScore(1);
+        }
+        if(state==='auth' && ch.next==='win'){
+          addScore(8);
+          toast('Mission accomplie 🎉','success');
+        }
+        advGo(ch.next);
+      });
+      advChoices.appendChild(b);
+    });
+  }
+  document.getElementById('advRestart').addEventListener('click', initAdventure);
+
+  /* Wire: init default */
+  renderLessons();
+  renderRecords();
+  initMemory();
+  initDnD();
+  initAdventure();
+
+  /* Helpers */
+  function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]]=[arr[j],arr[i]];
+    }
+    return arr;
+  }
+  function escapeHtml(s){
+    return String(s)
+      .replaceAll('&','&amp;')
+      .replaceAll('<','&lt;')
+      .replaceAll('>','&gt;')
+      .replaceAll('"','&quot;')
+      .replaceAll("'","&#039;");
+  }
+});
+</script>
+</body>
+</html>
